@@ -1,0 +1,38 @@
+IP-QQWry version 0.0.1
+
+    QQWry.Dat (http://www.cz88.net/fox/) is a file database for IP lookup.
+    It provides some useful infomation such as the geographical position of
+    the IP, who owns the ip, and so on. This Module provides a simple interface
+    for this database.
+
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+Alternatively, to install with Module::Build, you can use the following commands:
+
+    perl Build.PL
+    ./Build
+    ./Build test
+    ./Build install
+
+
+
+DEPENDENCIES
+
+None.
+
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2006, sunnavy
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
