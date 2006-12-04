@@ -4,7 +4,9 @@ use warnings;
 use strict;
 use Carp;
 use Socket;
-use version; our $VERSION = qv('0.0.2');
+use version; our $VERSION = qv('0.0.3');
+
+# constructor method
 
 sub new {
     my ( $class, $db ) = @_;
@@ -16,7 +18,7 @@ sub new {
     return $self;
 }
 
-# set db file, which name usually is "$path/QQWry.Dat";
+# set db file whose name is "$path/QQWry.Dat" most of the time.
 
 sub set_db {
     my ( $self, $db ) = @_;
@@ -26,12 +28,15 @@ sub set_db {
     $self->{first_index} = unpack 'V', $_;
     read $self->{fh}, $_, 4;
     $self->{last_index} = unpack 'V', $_;
-
 }
+
+# user use this method to look up IP, which is offered as a parameter.  now it
+# just support a string containing one IP address or domain name for
+# parameter.
 
 sub query {
     my ( $self, $input )  = @_;
-    my $ip    = unpack( 'N', inet_aton($input) );
+    my $ip    = unpack( 'N', inet_aton($input) ); # convert IP addr to integer
     my $index = $self->_index($ip);
     return 'unknown' unless $index;
     return $self->_result($index);
@@ -40,12 +45,10 @@ sub query {
 sub _index {
     my ( $self, $ip ) = @_;
     my $low = 0;
-
     my $up = ( $self->{last_index} - $self->{first_index} ) / 7;
-
     my ( $mid, $ip_start, $ip_end );
 
-    # find the index of $ip using binary search
+    # find the index for $ip using binary search
 
     while ( $low <= $up ) {
         $mid = int( ( $low + $up ) / 2 );
@@ -75,7 +78,7 @@ sub _index {
 }
 
 
-# get the useful infomation for user
+# get the useful infomation which will be returned to user
 
 sub _result {
     my ( $self, $index ) = @_;
@@ -92,8 +95,8 @@ sub _result {
     if ( $mode == 1 ) {
         read $self->{fh}, $_, 3;
         $offset = unpack 'V', $_ . chr 0;
-        seek $self->{fh}, $offset, 0;
 
+        seek $self->{fh}, $offset, 0;
         read $self->{fh}, $_, 1;
         $mode = ord;
         if ( $mode == 2 ) {
@@ -125,11 +128,14 @@ sub _result {
         $extense = $self->_extense();
     }
 
-    if ( "$base$extense" =~ m/CZ88\.NET/mx ) {
+    # 'CZ88.NET' means we have not retrieved useful infomation
+    if ( ( $base . $extense ) =~ m/CZ88\.NET/msx ) {
         return 'unknown';
     }
     return wantarray ? ( $base, $extense ) : $base . $extense;
 }
+
+# get string ended by \0
 
 sub _str {
     my $self = shift;
@@ -143,10 +149,11 @@ sub _str {
     return $str;
 }
 
+# get extense part ( area part ) of infomation
+
 sub _extense {
 
     my $self = shift;
-    my $extense;
 
     read $self->{fh}, $_, 1;
     my $mode = $_;
@@ -155,12 +162,11 @@ sub _extense {
         read $self->{fh}, $_, 3;
         my $extense_offset = unpack 'V', $_ . chr 0;
         seek $self->{fh}, $extense_offset, 0;
-        $extense = $self->_str();
+        return $self->_str();
     }
     else {
-        $extense = $mode . $self->_str();
+        return $mode . $self->_str();
     }
-    return $extense;
 }
 
 1;
@@ -174,7 +180,7 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.2
+This document describes IP::QQWry version 0.0.3
 
 
 =head1 SYNOPSIS
@@ -192,11 +198,14 @@ provides some useful infomation such as the geographical position of the IP,
 who owns the ip, and so on. This Module provides a simple interface for this
 database.
 
+for more about the format of the database, take a look at this:
+L<http://lumaqq.linuxsir.org/article/qqwry_format_detail.html>
+
 Caveat: The 'QQWry.Dat' database uses gbk encoding, this module doesn't
 provide any encoding conversion utility, so if you want some other
-encoding, you have to do it yourself. (Encode is a great module which can
+encoding, you have to do it yourself. (C<Encode> is a great module which can
 help you much.) In addition, the information retrieved from this database is
-mostly in Chinese, so it won't suited for world wide usage, ;-)
+mostly in Chinese, so maybe it isn't suited for world wide usage, ;-)
 
 =head1 INTERFACE
 
@@ -204,24 +213,25 @@ mostly in Chinese, so it won't suited for world wide usage, ;-)
 
 =item new($dbfilename)
 
-return a new instance of IP::QQWry.  you can offer a $dbfilename for parameter
+Return a new instance of IP::QQWry. You can offer a $dbfilename for parameter
 instead of call set_db($dbfilename) method later on.
 
 =item set_db($dbfilename)
 
-set database file provided by $dbfilename.
+Set database file provided by $dbfilename.
 
 =item query($ip)
 
-query the database for $ip. the $ip can be an actual IPv4 address such as
+Query the database for $ip. The $ip can be an actual IPv4 address such as
 166.111.166.111 or a domain name.
 
-In list context, it returns a list containing base and extension infomation.
-the base part is usually called country part although it isn't refer to
-country all the time. the extension part is usually called area part.
+In list context, it returns a list containing base and extension part of
+infomation, respectively. The base part is usually called country part though
+it doesn't refer to country all the time. The extension part is usually called
+area part.
 
-In scalar context, it returns a string which is catenation of base part and
-extension part.
+In scalar context, it returns a string which is just a catenation of base and
+extension part of infomation.
 
 =back
 

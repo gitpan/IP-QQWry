@@ -8,4 +8,6 @@ Revision history for IP-QQWry
          Test::Perl::Critic module.
        - remove require Test::More module in Makefile.PL and Build.PL
          because it's not necessary.
+0.0.3  Mon Dec  4 20:05
+       * rearrangement for 0.0.2, update POD and comments.
 
