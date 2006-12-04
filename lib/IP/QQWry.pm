@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use Carp;
 use Socket;
-use version; our $VERSION = qv('0.0.1');
+use version; our $VERSION = qv('0.0.2');
 
 sub new {
     my ( $class, $db ) = @_;
@@ -33,7 +33,7 @@ sub query {
     my ( $self, $input )  = @_;
     my $ip    = unpack( 'N', inet_aton($input) );
     my $index = $self->_index($ip);
-    croak "can not find infomation for $input" unless $index;
+    return 'unknown' unless $index;
     return $self->_result($index);
 }
 
@@ -174,7 +174,7 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.1
+This document describes IP::QQWry version 0.0.2
 
 
 =head1 SYNOPSIS
@@ -227,7 +227,7 @@ extension part.
 
 =head1 DEPENDENCIES
 
-L<Carp>, L<Socket>
+L<Socket>
 
 =head1 INCOMPATIBILITIES
 

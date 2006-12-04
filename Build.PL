@@ -8,7 +8,6 @@ my $builder = Module::Build->new(
     dist_author         => 'sunnavy <sunnavy@gmail.com>',
     dist_version_from   => 'lib/IP/QQWry.pm',
     requires => {
-        'Test::More' => 0.65,
         'version'    => 0.651,
     },
     add_to_cleanup      => [ 'IP-QQWry-*' ],

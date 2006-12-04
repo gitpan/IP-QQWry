@@ -9,7 +9,6 @@ WriteMakefile(
     ABSTRACT_FROM       => 'lib/IP/QQWry.pm',
     PL_FILES            => {},
     PREREQ_PM => {
-        'Test::More' => 0.65,
         'version'    => 0.651,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

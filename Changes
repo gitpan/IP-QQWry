@@ -2,4 +2,10 @@ Revision history for IP-QQWry
 
 0.0.1  Sun Dec  3 21:12:56 2006
        Initial release.
+0.0.2  Mon Dec  4
+       * return 'unknown' if can't find index.
+       * change perlcritic.t test case to be suited for the absence of
+         Test::Perl::Critic module.
+       - remove require Test::More module in Makefile.PL and Build.PL
+         because it's not necessary.
 
