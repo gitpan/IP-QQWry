@@ -10,4 +10,7 @@ Revision history for IP-QQWry
          because it's not necessary.
 0.0.3  Mon Dec  4 20:05
        * rearrangement for 0.0.2, update POD and comments.
+0.0.4  2006-12-05 15:54:04
+       + add a simple input checking mechanism.
+       * if can't find infomation, return undef rather than 'unknown'
 

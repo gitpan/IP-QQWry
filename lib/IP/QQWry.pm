@@ -4,7 +4,9 @@ use warnings;
 use strict;
 use Carp;
 use Socket;
-use version; our $VERSION = qv('0.0.3');
+use Regexp::Common qw /net/;
+
+use version; our $VERSION = qv('0.0.4');
 
 # constructor method
 
@@ -35,11 +37,25 @@ sub set_db {
 # parameter.
 
 sub query {
-    my ( $self, $input )  = @_;
-    my $ip    = unpack( 'N', inet_aton($input) ); # convert IP addr to integer
+
+    my $self = shift;
+    my $ip = $self->_convert_input(shift);
     my $index = $self->_index($ip);
-    return 'unknown' unless $index;
+    return unless $index;             # return undef if can't find index
     return $self->_result($index);
+}
+
+sub _convert_input {
+
+    my ( $self, $input ) = @_;
+
+    if ( $input =~ /^[.\d\s]*$/msx && $input !~ /$RE{net}{IPv4}/msx ) {
+        croak 'wrong IPv4 address input';
+    }
+    my $str = inet_aton($input);    # convert input to an opaque string
+    croak 'wrong input' unless $str;
+
+    return unpack( 'N', $str );    # convert string to integer
 }
 
 sub _index {
@@ -130,7 +146,7 @@ sub _result {
 
     # 'CZ88.NET' means we have not retrieved useful infomation
     if ( ( $base . $extense ) =~ m/CZ88\.NET/msx ) {
-        return 'unknown';
+        return;    # return undef if we get useless infomation
     }
     return wantarray ? ( $base, $extense ) : $base . $extense;
 }
@@ -180,7 +196,7 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.3
+This document describes IP::QQWry version 0.0.4
 
 
 =head1 SYNOPSIS
@@ -237,7 +253,7 @@ extension part of infomation.
 
 =head1 DEPENDENCIES
 
-L<Socket>
+L<Socket>, L<Regexp::Common>
 
 =head1 INCOMPATIBILITIES
 
