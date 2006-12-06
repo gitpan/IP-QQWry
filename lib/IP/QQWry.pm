@@ -6,7 +6,7 @@ use Carp;
 use Socket;
 use Regexp::Common qw /net/;
 
-use version; our $VERSION = qv('0.0.4');
+use version; our $VERSION = qv('0.0.5');
 
 # constructor method
 
@@ -185,6 +185,11 @@ sub _extense {
     }
 }
 
+sub DESTROY {
+    my $self = shift;
+    close $self->{fh} if $self->{fh};
+}
+
 1;
 
 __END__
@@ -196,7 +201,7 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.4
+This document describes IP::QQWry version 0.0.5
 
 
 =head1 SYNOPSIS

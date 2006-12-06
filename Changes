@@ -13,4 +13,5 @@ Revision history for IP-QQWry
 0.0.4  2006-12-05 15:54:04
        + add a simple input checking mechanism.
        * if can't find infomation, return undef rather than 'unknown'
-
+0.0.5  2006-12-06 14:27:07
+       + close filehandle if necessary when destructing.
