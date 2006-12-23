@@ -15,3 +15,5 @@ Revision history for IP-QQWry
        * if can't find infomation, return undef rather than 'unknown'
 0.0.5  2006-12-06 14:27:07
        + close filehandle if necessary when destructing.
+0.0.6  2006-12-23 22:24:17
+       + die when database is not provided before query.

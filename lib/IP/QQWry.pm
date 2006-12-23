@@ -6,7 +6,7 @@ use Carp;
 use Socket;
 use Regexp::Common qw /net/;
 
-use version; our $VERSION = qv('0.0.5');
+use version; our $VERSION = qv('0.0.6');
 
 # constructor method
 
@@ -14,7 +14,7 @@ sub new {
     my ( $class, $db ) = @_;
     my $self = {};
     bless $self, $class;
-    if ( -r $db ) {
+    if ( $db && -r $db ) {
         $self->set_db($db);
     }
     return $self;
@@ -39,6 +39,7 @@ sub set_db {
 sub query {
 
     my $self = shift;
+    croak 'database is not provided' unless $self->{fh};
     my $ip = $self->_convert_input(shift);
     my $index = $self->_index($ip);
     return unless $index;             # return undef if can't find index
@@ -201,15 +202,15 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.5
+This document describes IP::QQWry version 0.0.6
 
 
 =head1 SYNOPSIS
 
     use IP::QQWry;
-    my $qqwry = IP::QQWry->new('~/QQWry.Dat');
+    my $qqwry = IP::QQWry->new('QQWry.Dat');
     my $info = $qqwry->query('166.111.166.111');
-    my $info = $qqwry->query('www.sunnavy.net');
+    my $info = $qqwry->query('www.perl.org');
 
 =head1 DESCRIPTION
 
@@ -278,27 +279,3 @@ Copyright (c) 2006, sunnavy C<< <sunnavy@gmail.com> >>. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.
-
-
-=head1 DISCLAIMER OF WARRANTY
-
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
-
-IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
