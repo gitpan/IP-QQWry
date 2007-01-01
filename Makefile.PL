@@ -11,6 +11,7 @@ WriteMakefile(
     PREREQ_PM     => {
         'version'        => 0.651,
         'Regexp::Common' => 2.120,
+        'Readonly'       => 1.03,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES    => 'IP-QQWry-*' },

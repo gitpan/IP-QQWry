@@ -1,12 +1,16 @@
 package IP::QQWry;
 
+use 5.008;
 use warnings;
 use strict;
 use Carp;
 use Socket;
 use Regexp::Common qw /net/;
 
-use version; our $VERSION = qv('0.0.6');
+use version; our $VERSION = qv('0.0.8');
+
+use Readonly;
+Readonly my $VERSION_IP => '255.255.255.0';
 
 # constructor method
 
@@ -20,7 +24,7 @@ sub new {
     return $self;
 }
 
-# set db file whose name is "$path/QQWry.Dat" most of the time.
+# set db file whose name is "PATH/QQWry.Dat" most of the time.
 
 sub set_db {
     my ( $self, $db ) = @_;
@@ -44,6 +48,21 @@ sub query {
     my $index = $self->_index($ip);
     return unless $index;             # return undef if can't find index
     return $self->_result($index);
+}
+
+sub db_version {
+    my ( $self, $db ) = @_;
+
+    if ( $db ) {
+        my $db_ori = $self->{fh};
+        self->set_db($db);
+        my $version = self->db_version();
+        $self->{fh} = $db_ori;
+        return $version;
+    }
+    else {
+        return $self->query($VERSION_IP);
+    }
 }
 
 sub _convert_input {
@@ -202,7 +221,7 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.6
+This document describes IP::QQWry version 0.0.8
 
 
 =head1 SYNOPSIS
@@ -211,6 +230,7 @@ This document describes IP::QQWry version 0.0.6
     my $qqwry = IP::QQWry->new('QQWry.Dat');
     my $info = $qqwry->query('166.111.166.111');
     my $info = $qqwry->query('www.perl.org');
+    my $version = $qqwry->db_version();
 
 =head1 DESCRIPTION
 
@@ -241,6 +261,7 @@ instead of call set_db($dbfilename) method later on.
 =item set_db($dbfilename)
 
 Set database file provided by $dbfilename.
+Infact it also get some index information from database.
 
 =item query($ip)
 
@@ -254,6 +275,11 @@ area part.
 
 In scalar context, it returns a string which is just a catenation of base and
 extension part of infomation.
+
+=item db_version($dbfilename)
+
+return database version. If $dbfilename ommited, return current database
+version.
 
 =back
 
