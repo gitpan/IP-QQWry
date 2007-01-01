@@ -7,7 +7,7 @@ use Carp;
 use Socket;
 use Regexp::Common qw /net/;
 
-use version; our $VERSION = qv('0.0.8');
+use version; our $VERSION = qv('0.0.9');
 
 use Readonly;
 Readonly my $VERSION_IP => '255.255.255.0';
@@ -55,8 +55,8 @@ sub db_version {
 
     if ( $db ) {
         my $db_ori = $self->{fh};
-        self->set_db($db);
-        my $version = self->db_version();
+        $self->set_db($db);
+        my $version = $self->db_version();
         $self->{fh} = $db_ori;
         return $version;
     }
@@ -221,7 +221,7 @@ IP::QQWry - look up IP from QQWry database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.8
+This document describes IP::QQWry version 0.0.9
 
 
 =head1 SYNOPSIS
@@ -285,7 +285,7 @@ version.
 
 =head1 DEPENDENCIES
 
-L<Socket>, L<Regexp::Common>
+L<Socket>, L<Regexp::Common>, L<Readonly>
 
 =head1 INCOMPATIBILITIES
 

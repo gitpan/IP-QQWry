@@ -21,3 +21,5 @@ Revision history for IP-QQWry
        + sub db_version.
        * require perl 5.8 or later.
        * require Readonly module.
+0.0.9  2007-01-01 18:38:24
+       * bug fix version
