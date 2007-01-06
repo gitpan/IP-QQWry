@@ -1,9 +1,9 @@
-IP-QQWry version 0.0.9
+IP-QQWry version 0.0.10
 
-    QQWry.Dat (http://www.cz88.net/fox/) is a file database for IP lookup.
-    It provides some useful infomation such as the geographical position of
-    the IP, who owns the ip, and so on. This Module provides a simple interface
-    for this database.
+    'QQWry.Dat' L<http://www.cz88.net/fox/> is a IP file database.  It
+    provides some useful infomation such as the geographical position of the
+    host binded with the queried IP, the IP's owner, etc. C<IP::QQWry>
+    provides a simple interface for this file database.
 
 
 INSTALLATION
@@ -32,7 +32,7 @@ None.
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2006, sunnavy
+Copyright (C) 2006, 2007, sunnavy(<sunnavy@gmail.com>)
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

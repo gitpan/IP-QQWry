@@ -7,12 +7,7 @@ use Carp;
 use Socket;
 use Regexp::Common qw /net/;
 
-use version; our $VERSION = qv('0.0.9');
-
-use Readonly;
-Readonly my $VERSION_IP => '255.255.255.0';
-
-# constructor method
+use version; our $VERSION = qv('0.0.10');
 
 sub new {
     my ( $class, $db ) = @_;
@@ -25,23 +20,24 @@ sub new {
 }
 
 # set db file whose name is "PATH/QQWry.Dat" most of the time.
-
 sub set_db {
     my ( $self, $db ) = @_;
     open $self->{fh}, '<', $db or croak "can not read file $db: $!";
+    $self->_init_db();
+}
 
+sub _init_db {
+    my $self = shift;
     read $self->{fh}, $_, 4;
     $self->{first_index} = unpack 'V', $_;
     read $self->{fh}, $_, 4;
     $self->{last_index} = unpack 'V', $_;
 }
 
-# user use this method to look up IP, which is offered as a parameter.  now it
-# just support a string containing one IP address or domain name for
-# parameter.
+# query is the the interface for user.
+# the parameter is a IPv4 address or a domain name.
 
 sub query {
-
     my $self = shift;
     croak 'database is not provided' unless $self->{fh};
     my $ip = $self->_convert_input(shift);
@@ -51,18 +47,7 @@ sub query {
 }
 
 sub db_version {
-    my ( $self, $db ) = @_;
-
-    if ( $db ) {
-        my $db_ori = $self->{fh};
-        $self->set_db($db);
-        my $version = $self->db_version();
-        $self->{fh} = $db_ori;
-        return $version;
-    }
-    else {
-        return $self->query($VERSION_IP);
-    }
+    return shift->query('255.255.255.0');
 }
 
 sub _convert_input {
@@ -216,12 +201,12 @@ __END__
 
 =head1 NAME
 
-IP::QQWry - look up IP from QQWry database(file).
+IP::QQWry - a simple interface for QQWry IP database(file).
 
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.9
+This document describes IP::QQWry version 0.0.10
 
 
 =head1 SYNOPSIS
@@ -235,57 +220,59 @@ This document describes IP::QQWry version 0.0.9
 =head1 DESCRIPTION
 
 
-'QQWry.Dat' L<http://www.cz88.net/fox/> is a file database for IP lookup.  It
-provides some useful infomation such as the geographical position of the IP,
-who owns the ip, and so on. This Module provides a simple interface for this
-database.
+'QQWry.Dat' L<http://www.cz88.net/fox/> is a IP file database.  It provides
+some useful infomation such as the geographical position of the host binded
+with the queried IP, the IP's owner, etc. C<IP::QQWry> provides a simple
+interface for this file database.
 
 for more about the format of the database, take a look at this:
 L<http://lumaqq.linuxsir.org/article/qqwry_format_detail.html>
 
-Caveat: The 'QQWry.Dat' database uses gbk encoding, this module doesn't
-provide any encoding conversion utility, so if you want some other
-encoding, you have to do it yourself. (C<Encode> is a great module which can
-help you much.) In addition, the information retrieved from this database is
-mostly in Chinese, so maybe it isn't suited for world wide usage, ;-)
+Caveat: The 'QQWry.Dat' database uses gbk encoding, C<IP::QQWry> doesn't
+provide any encoding conversion utility, so if you want some other encoding,
+you have to do it yourself. (C<Encode> is a great module which can help you
+much, ;-)
 
 =head1 INTERFACE
 
 =over 4
 
-=item new($dbfilename)
+=item new
 
-Return a new instance of IP::QQWry. You can offer a $dbfilename for parameter
-instead of call set_db($dbfilename) method later on.
+Accept one optional parameter for database file name.
+Return an object of IP::QQWry.
 
-=item set_db($dbfilename)
+=item set_db
 
-Set database file provided by $dbfilename.
-Infact it also get some index information from database.
+Set database file.
+Accept one parameter for database file name.
 
-=item query($ip)
+=item query
 
-Query the database for $ip. The $ip can be an actual IPv4 address such as
-166.111.166.111 or a domain name.
+Accept one parameter, which can be an IPv4 address such as 166.11.166.111 or a
+domain name.
 
-In list context, it returns a list containing base and extension part of
-infomation, respectively. The base part is usually called country part though
-it doesn't refer to country all the time. The extension part is usually called
-area part.
+In list context, it returns a list containing the base part and the extension
+part of infomation, respectively. The base part is usually called the country
+part though it doesn't refer to country all the time. The extension part is
+usually called the area part.
 
-In scalar context, it returns a string which is just a catenation of base and
-extension part of infomation.
+In scalar context, it returns a string which is just a catenation of the base
+and extension parts.
 
-=item db_version($dbfilename)
+Caveat: Although query indeed do some validation for your input, it's a naive
+one at least now. Maybe you want to do it yourself for better validation.
 
-return database version. If $dbfilename ommited, return current database
-version.
+
+=item db_version
+
+return database version.
 
 =back
 
 =head1 DEPENDENCIES
 
-L<Socket>, L<Regexp::Common>, L<Readonly>
+L<Socket>, L<Regexp::Common>
 
 =head1 INCOMPATIBILITIES
 
@@ -301,7 +288,7 @@ sunnavy  C<< <sunnavy@gmail.com> >>
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2006, sunnavy C<< <sunnavy@gmail.com> >>. All rights reserved.
+Copyright (c) 2006, 2007, sunnavy C<< <sunnavy@gmail.com> >>. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.
