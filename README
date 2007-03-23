@@ -1,9 +1,9 @@
-IP-QQWry version 0.0.10
+IP-QQWry version 0.0.11
 
-    'QQWry.Dat' L<http://www.cz88.net/fox/> is a IP file database.  It
-    provides some useful infomation such as the geographical position of the
-    host binded with the queried IP, the IP's owner, etc. C<IP::QQWry>
-    provides a simple interface for this file database.
+'QQWry.Dat' L<http://www.cz88.net/fox/> is an IP file database.  It provides
+some useful infomation such as the geographical position of the host bound
+with some IP address, the IP's owner, etc. L<IP::QQWry> provides a simple
+interface for this file database.
 
 
 INSTALLATION

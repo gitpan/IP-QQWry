@@ -4,26 +4,28 @@ use 5.008;
 use warnings;
 use strict;
 use Carp;
-use Socket;
-use Regexp::Common qw /net/;
-
-use version; our $VERSION = qv('0.0.10');
+use version; our $VERSION = qv('0.0.11');
 
 sub new {
     my ( $class, $db ) = @_;
     my $self = {};
     bless $self, $class;
-    if ( $db && -r $db ) {
+    if ($db) {
         $self->set_db($db);
     }
     return $self;
 }
 
-# set db file whose name is "PATH/QQWry.Dat" most of the time.
+# set db file of which the name is `QQWry.Dat' most of the time.
 sub set_db {
     my ( $self, $db ) = @_;
-    open $self->{fh}, '<', $db or croak "can not read file $db: $!";
-    $self->_init_db();
+    if ( $db && -r $db ) {
+        open $self->{fh}, '<', $db or croak "how can this happen? $!";
+        $self->_init_db;
+        return 1;
+    }
+    carp 'set_db failed';
+    return;
 }
 
 sub _init_db {
@@ -34,48 +36,98 @@ sub _init_db {
     $self->{last_index} = unpack 'V', $_;
 }
 
-# query is the the interface for user.
-# the parameter is a IPv4 address or a domain name.
+# sub query is the the interface for user.
+# the parameter is a IPv4 address
 
 sub query {
-    my $self = shift;
-    croak 'database is not provided' unless $self->{fh};
-    my $ip = $self->_convert_input(shift);
-    my $index = $self->_index($ip);
-    return unless $index;             # return undef if can't find index
-    return $self->_result($index);
+    my ( $self, $ip ) = @_;
+    unless ( $self->{fh} ) {
+        carp 'database is not provided';
+        return;
+    }
+
+    if ( $ip =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/ ) {
+
+        # $ip is like '166.111.166.111'
+        return $self->_result( $1 * 256**3 + $2 * 256**2 + $3 * 256 + $4 );
+    }
+    elsif ( $ip =~ /(\d+)/ ) {
+
+        # $ip is an IP integer like 2792334959
+        return $self->_result($1);
+    }
+    return;
 }
 
 sub db_version {
-    return shift->query('255.255.255.0');
+    return shift->query('255.255.255.0');    # db version info is held there
 }
 
-sub _convert_input {
+# get the useful infomation which will be returned to user
 
-    my ( $self, $input ) = @_;
+sub _result {
+    my ( $self, $ip ) = @_;
+    my $index = $self->_index($ip);
+    return unless $index;    # can't find index
 
-    if ( $input =~ /^[.\d\s]*$/msx && $input !~ /$RE{net}{IPv4}/msx ) {
-        croak 'wrong IPv4 address input';
+    my ( $base, $ext );
+    seek $self->{fh}, $index + 4, 0;
+    read $self->{fh}, $_, 3;
+
+    my $offset = unpack 'V', $_ . chr 0;
+    seek $self->{fh}, $offset + 4, 0;
+    read $self->{fh}, $_, 1;
+
+    my $mode = ord;
+
+    if ( $mode == 1 ) {
+        $self->_seek;
+        $offset = tell $self->{fh};
+        read $self->{fh}, $_, 1;
+        $mode = ord;
+        if ( $mode == 2 ) {
+            $self->_seek;
+            $base = $self->_str;
+            seek $self->{fh}, $offset + 4, 0;
+            $ext = $self->_ext;
+        }
+        else {
+            $base = $self->_str;
+            $ext  = $self->_ext;
+        }
     }
-    my $str = inet_aton($input);    # convert input to an opaque string
-    croak 'wrong input' unless $str;
+    elsif ( $mode == 2 ) {
+        $self->_seek;
+        $base = $self->_str;
+        seek $self->{fh}, $offset + 8, 0;
+        $ext = $self->_ext;
+    }
+    else {
+        seek $self->{fh}, -1, 1;
+        $base = $self->_str;
+        $ext  = $self->_ext;
+    }
 
-    return unpack( 'N', $str );    # convert string to integer
+    # 'CZ88.NET' means we don't have useful information
+    if ( ( $base . $ext ) =~ m/CZ88\.NET/msx ) {
+        return;
+    }
+    return wantarray ? ( $base, $ext ) : $base . $ext;
 }
 
 sub _index {
     my ( $self, $ip ) = @_;
     my $low = 0;
-    my $up = ( $self->{last_index} - $self->{first_index} ) / 7;
+    my $up  = ( $self->{last_index} - $self->{first_index} ) / 7;
     my ( $mid, $ip_start, $ip_end );
 
-    # find the index for $ip using binary search
-
+    # find the index using binary search
     while ( $low <= $up ) {
         $mid = int( ( $low + $up ) / 2 );
         seek $self->{fh}, $self->{first_index} + $mid * 7, 0;
         read $self->{fh}, $_, 4;
         $ip_start = unpack 'V', $_;
+
         if ( $ip < $ip_start ) {
             $up = $mid - 1;
         }
@@ -95,65 +147,14 @@ sub _index {
         }
     }
 
-    return;    # fails, so we return undef
+    return;
 }
 
-
-# get the useful infomation which will be returned to user
-
-sub _result {
-    my ( $self, $index ) = @_;
-    my ( $base, $extense );
-    seek $self->{fh}, $index + 4, 0;
+sub _seek {
+    my $self = shift;
     read $self->{fh}, $_, 3;
-
     my $offset = unpack 'V', $_ . chr 0;
-    seek $self->{fh}, $offset + 4, 0;
-    read $self->{fh}, $_, 1;
-
-    my $mode = ord;
-
-    if ( $mode == 1 ) {
-        read $self->{fh}, $_, 3;
-        $offset = unpack 'V', $_ . chr 0;
-
-        seek $self->{fh}, $offset, 0;
-        read $self->{fh}, $_, 1;
-        $mode = ord;
-        if ( $mode == 2 ) {
-            read $self->{fh}, $_, 3;
-            my $base_offset = unpack 'V', $_ . chr 0;
-            seek $self->{fh}, $base_offset, 0;
-            $base = $self->_str();
-
-            seek $self->{fh}, $offset + 4, 0;
-            $extense = $self->_extense();
-        }
-        else {
-            $base    = $self->_str();
-            $extense = $self->_extense();
-        }
-
-    }
-    elsif ( $mode == 2 ) {
-        read $self->{fh}, $_, 3;
-        my $base_offset = unpack 'V', $_ . chr 0;
-        seek $self->{fh}, $base_offset, 0;
-        $base = $self->_str();
-        seek $self->{fh}, $offset + 8, 0;
-        $extense = $self->_extense();
-    }
-    else {
-        seek $self->{fh}, -1, 1;
-        $base    = $self->_str();
-        $extense = $self->_extense();
-    }
-
-    # 'CZ88.NET' means we have not retrieved useful infomation
-    if ( ( $base . $extense ) =~ m/CZ88\.NET/msx ) {
-        return;    # return undef if we get useless infomation
-    }
-    return wantarray ? ( $base, $extense ) : $base . $extense;
+    seek $self->{fh}, $offset, 0;
 }
 
 # get string ended by \0
@@ -170,23 +171,17 @@ sub _str {
     return $str;
 }
 
-# get extense part ( area part ) of infomation
-
-sub _extense {
-
+sub _ext {
     my $self = shift;
-
     read $self->{fh}, $_, 1;
-    my $mode = $_;
+    my $mode = ord $_;
 
-    if ( ord $mode == 1 || ord $mode == 2 ) {
-        read $self->{fh}, $_, 3;
-        my $extense_offset = unpack 'V', $_ . chr 0;
-        seek $self->{fh}, $extense_offset, 0;
-        return $self->_str();
+    if ( $mode == 1 || $mode == 2 ) {
+        $self->_seek;
+        return $self->_str;
     }
     else {
-        return $mode . $self->_str();
+        return chr($mode) . $self->_str;
     }
 }
 
@@ -206,7 +201,7 @@ IP::QQWry - a simple interface for QQWry IP database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.10
+This document describes IP::QQWry version 0.0.11
 
 
 =head1 SYNOPSIS
@@ -214,24 +209,23 @@ This document describes IP::QQWry version 0.0.10
     use IP::QQWry;
     my $qqwry = IP::QQWry->new('QQWry.Dat');
     my $info = $qqwry->query('166.111.166.111');
-    my $info = $qqwry->query('www.perl.org');
-    my $version = $qqwry->db_version();
+    my ( $base, $ext ) = $qqwry->query(2792334959);
+    my $version = $qqwry->db_version;
 
 =head1 DESCRIPTION
 
 
-'QQWry.Dat' L<http://www.cz88.net/fox/> is a IP file database.  It provides
-some useful infomation such as the geographical position of the host binded
-with the queried IP, the IP's owner, etc. C<IP::QQWry> provides a simple
+'QQWry.Dat' L<http://www.cz88.net/fox/> is an IP file database.  It provides
+some useful infomation such as the geographical position of the host bound
+with some IP address, the IP's owner, etc. L<IP::QQWry> provides a simple
 interface for this file database.
 
 for more about the format of the database, take a look at this:
 L<http://lumaqq.linuxsir.org/article/qqwry_format_detail.html>
 
-Caveat: The 'QQWry.Dat' database uses gbk encoding, C<IP::QQWry> doesn't
+Caveat: The 'QQWry.Dat' database uses gbk or big5 encoding, C<IP::QQWry> doesn't
 provide any encoding conversion utility, so if you want some other encoding,
-you have to do it yourself. (C<Encode> is a great module which can help you
-much, ;-)
+you have to do it yourself. (BTW, L<Encode> is a great module for this.)
 
 =head1 INTERFACE
 
@@ -240,17 +234,18 @@ much, ;-)
 =item new
 
 Accept one optional parameter for database file name.
-Return an object of IP::QQWry.
+Return an object of L<IP::QQWry>.
 
 =item set_db
 
 Set database file.
-Accept one parameter for database file name.
+Accept a IP database file path as a parameter.
+Return 1 for success, undef for failure.
 
 =item query
 
-Accept one parameter, which can be an IPv4 address such as 166.11.166.111 or a
-domain name.
+Accept one parameter, which has to be an IPv4 address such as
+`166.111.166.111` or an integer like 2792334959.
 
 In list context, it returns a list containing the base part and the extension
 part of infomation, respectively. The base part is usually called the country
@@ -260,9 +255,11 @@ usually called the area part.
 In scalar context, it returns a string which is just a catenation of the base
 and extension parts.
 
-Caveat: Although query indeed do some validation for your input, it's a naive
-one at least now. Maybe you want to do it yourself for better validation.
+If it can't find useful information, return undef.
 
+Caveat: the domain name as an argument is not supported any more since 0.0.11.
+Because a domain name could have more than one IP address bound, the
+previous implementation is lame and not graceful, so I dumped it.
 
 =item db_version
 
@@ -272,11 +269,7 @@ return database version.
 
 =head1 DEPENDENCIES
 
-L<Socket>, L<Regexp::Common>
-
-=head1 INCOMPATIBILITIES
-
-None reported.
+L<version>
 
 =head1 BUGS AND LIMITATIONS
 

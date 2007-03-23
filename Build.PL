@@ -10,7 +10,6 @@ my $builder = Module::Build->new(
     requires          => {
         'version'        => 0.651,
         'Regexp::Common' => 2.120,
-        'Readonly'       => 1.03,
     },
     add_to_cleanup => ['IP-QQWry-*'],
 );

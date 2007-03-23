@@ -1,40 +1,45 @@
 use strict;
 use warnings;
-
 use Test::More qw/no_plan/;
 
 use lib './lib';
-
 use IP::QQWry;
 
-my $qqwry = IP::QQWry->new('QQWry.Dat');
+my $qqwry = IP::QQWry->new;
+isa_ok( $qqwry, 'IP::QQWry' );
 
-isa_ok( $qqwry, 'IP::QQWry', '$qqwry is IP::QQWry' );
+$qqwry = IP::QQWry->new('QQWry.Dat');
+isa_ok( $qqwry, 'IP::QQWry' );
 
 SKIP: {
-    skip 'have no QQWry.Dat file', 6,  unless $qqwry->{fh};
+    skip 'have no QQWry.Dat file', 10, unless $qqwry->{fh};
 
-    my $ip = '166.111.166.111';
-    my ( $base, $extense ) = $qqwry->query($ip);
-
-    is( $base,    '清华大学学生宿舍', 'the base part is ok' );
-    is( $extense, '14号楼',           'the extense part is ok' );
-
-    my $info = $qqwry->query($ip);
-
-    is( $info, '清华大学学生宿舍14号楼', 'the full info is ok' );
-
-    $ip = '211.99.222.1';
-
-    ( $base, $extense ) = $qqwry->query($ip);
-
-    is( $base,    '北京市',           'the base part is ok' );
-    is( $extense, '世纪互联数据中心', 'the extense part is ok' );
-
-    $info = $qqwry->query($ip);
-    is( $info, '北京市世纪互联数据中心', 'the full info is ok' );
-
-    $info = $qqwry->query('www.sunnavy.net');
-    is( $info, '北京市歌华宽带', 'domain name lookup is ok');
+    # these test are for gbk encoding database
+    my %info = (
+        '166.111.166.111' => {
+            base => '清华大学学生宿舍',
+            ext  => '14号楼',
+        },
+        '211.99.222.1' => {
+            base => '北京市',
+            ext  => '世纪互联数据中心',
+        },
+        2792334959 => {
+            base => '清华大学学生宿舍',
+            ext  => '14号楼',
+        },
+    );
+    for my $ip ( keys %info ) {
+        my ( $base, $ext ) = $qqwry->query($ip);
+        is( $base, $info{$ip}->{base}, 'list context query, the base part' );
+        is( $ext,  $info{$ip}->{ext},  'list context query, the ext part' );
+        my $info = $qqwry->query($ip);
+        is( $info,
+            $info{$ip}->{base} . $info{$ip}->{ext},
+            'scalar context query'
+        );
+    }
+    like( $qqwry->db_version, qr/纯真网络\d{4}年\d{1,2}月\d{1,2}日IP数据/,
+        'db version' );
 }
 

@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
-
 WriteMakefile(
     NAME          => 'IP::QQWry',
     AUTHOR        => 'sunnavy <sunnavy@gmail.com>',
@@ -16,3 +15,4 @@ WriteMakefile(
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES    => 'IP-QQWry-*' },
 );
+
