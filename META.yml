@@ -1,12 +1,11 @@
 --- #YAML:1.0
 name:                IP-QQWry
-version:             v0.0.11
+version:             v0.0.12
 abstract:            a simple interface for QQWry IP database(file).
 license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.31
 distribution_type:   module
 requires:     
-    Regexp::Common:                2.12
     version:                       0.651
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.2.html

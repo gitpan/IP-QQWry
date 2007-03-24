@@ -10,7 +10,6 @@ WriteMakefile(
     LICENSE       => 'perl',
     PREREQ_PM     => {
         'version'        => 0.651,
-        'Regexp::Common' => 2.120,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES    => 'IP-QQWry-*' },

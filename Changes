@@ -30,3 +30,5 @@ Revision history for IP-QQWry
        - dump domain name support
        - use carp instead of croak for not critical errors.
        - add integer IP Address support
+0.0.12 2007-03-25
+       - bug fixed release

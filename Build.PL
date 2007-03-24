@@ -9,7 +9,6 @@ my $builder = Module::Build->new(
     dist_version_from => 'lib/IP/QQWry.pm',
     requires          => {
         'version'        => 0.651,
-        'Regexp::Common' => 2.120,
     },
     add_to_cleanup => ['IP-QQWry-*'],
 );

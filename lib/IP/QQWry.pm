@@ -4,7 +4,7 @@ use 5.008;
 use warnings;
 use strict;
 use Carp;
-use version; our $VERSION = qv('0.0.11');
+use version; our $VERSION = qv('0.0.12');
 
 sub new {
     my ( $class, $db ) = @_;
@@ -92,6 +92,7 @@ sub _result {
             $ext = $self->_ext;
         }
         else {
+            seek $self->{fh}, -1, 1;
             $base = $self->_str;
             $ext  = $self->_ext;
         }
@@ -109,7 +110,7 @@ sub _result {
     }
 
     # 'CZ88.NET' means we don't have useful information
-    if ( ( $base . $ext ) =~ m/CZ88\.NET/msx ) {
+    if ( ( $base . $ext ) =~ m/CZ88\.NET/ ) {
         return;
     }
     return wantarray ? ( $base, $ext ) : $base . $ext;
@@ -201,7 +202,7 @@ IP::QQWry - a simple interface for QQWry IP database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.11
+This document describes IP::QQWry version 0.0.12
 
 
 =head1 SYNOPSIS
@@ -257,9 +258,9 @@ and extension parts.
 
 If it can't find useful information, return undef.
 
-Caveat: the domain name as an argument is not supported any more since 0.0.11.
+Caveat: the domain name as an argument is not supported any more since v0.0.12.
 Because a domain name could have more than one IP address bound, the
-previous implementation is lame and not graceful, so I dumped it.
+previous implementation is lame and not graceful, so I decided to dump it.
 
 =item db_version
 
