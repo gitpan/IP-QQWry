@@ -4,7 +4,9 @@ use 5.008;
 use warnings;
 use strict;
 use Carp;
-use version; our $VERSION = qv('0.0.12');
+use version; our $VERSION = qv('0.0.13');
+
+my %cache;
 
 sub new {
     my ( $class, $db ) = @_;
@@ -40,23 +42,47 @@ sub _init_db {
 # the parameter is a IPv4 address
 
 sub query {
-    my ( $self, $ip ) = @_;
+    my ( $self, $input ) = @_;
     unless ( $self->{fh} ) {
         carp 'database is not provided';
         return;
     }
 
-    if ( $ip =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/ ) {
+    my $ip = $self->_convert_input( $input );
 
-        # $ip is like '166.111.166.111'
-        return $self->_result( $1 * 256**3 + $2 * 256**2 + $3 * 256 + $4 );
+    if ($ip) {
+        $cache{$ip} = [ $self->_result($ip) ] unless $self->cached($ip);
+        return wantarray ? @{ $cache{$ip} } : join '', @{ $cache{$ip} };
     }
-    elsif ( $ip =~ /(\d+)/ ) {
+}
 
-        # $ip is an IP integer like 2792334959
-        return $self->_result($1);
+sub _convert_input {
+    my ( $self, $input ) = @_;
+    if ( $input =~ /(\d+)\.(\d+)\.(\d+)\.(\d+)/ ) {
+        return $1 * 256**3 + $2 * 256**2 + $3 * 256 + $4;
     }
-    return;
+    elsif ( $input =~ /(\d+)/ ) {
+        return $1;
+    }
+    else {
+        return;
+    }
+}
+
+sub cached {
+    my ( $self, $input ) = @_;
+    my $ip = $self->_convert_input($input);
+    return $cache{$ip} ? 1 : 0;
+}
+
+sub clear {
+    my ( $self, $ip ) = @_;
+    if ( $ip ) {
+        undef $cache{$ip};
+    }
+    else {
+        undef %cache;
+    }
 }
 
 sub db_version {
@@ -68,9 +94,10 @@ sub db_version {
 sub _result {
     my ( $self, $ip ) = @_;
     my $index = $self->_index($ip);
-    return unless $index;    # can't find index
+    return unless $index;                    # can't find index
 
-    my ( $base, $ext );
+    my ( $base, $ext ) = (q{}) x 2;
+
     seek $self->{fh}, $index + 4, 0;
     read $self->{fh}, $_, 3;
 
@@ -110,10 +137,8 @@ sub _result {
     }
 
     # 'CZ88.NET' means we don't have useful information
-    if ( ( $base . $ext ) =~ m/CZ88\.NET/ ) {
-        return;
-    }
-    return wantarray ? ( $base, $ext ) : $base . $ext;
+    return if ( $base . $ext ) =~ m/CZ88\.NET/;
+    return ( $base, $ext );
 }
 
 sub _index {
@@ -202,7 +227,7 @@ IP::QQWry - a simple interface for QQWry IP database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.12
+This document describes IP::QQWry version 0.0.13
 
 
 =head1 SYNOPSIS
@@ -212,6 +237,7 @@ This document describes IP::QQWry version 0.0.12
     my $info = $qqwry->query('166.111.166.111');
     my ( $base, $ext ) = $qqwry->query(2792334959);
     my $version = $qqwry->db_version;
+    $qqwry->clear;
 
 =head1 DESCRIPTION
 
@@ -221,7 +247,7 @@ some useful infomation such as the geographical position of the host bound
 with some IP address, the IP's owner, etc. L<IP::QQWry> provides a simple
 interface for this file database.
 
-for more about the format of the database, take a look at this:
+For more about the format of the database, take a look at this:
 L<http://lumaqq.linuxsir.org/article/qqwry_format_detail.html>
 
 Caveat: The 'QQWry.Dat' database uses gbk or big5 encoding, C<IP::QQWry> doesn't
@@ -261,6 +287,14 @@ If it can't find useful information, return undef.
 Caveat: the domain name as an argument is not supported any more since v0.0.12.
 Because a domain name could have more than one IP address bound, the
 previous implementation is lame and not graceful, so I decided to dump it.
+
+=item clear
+
+clear cache
+
+=item cached($ip)
+
+return 1 if $ip is cached, 0 otherwise
 
 =item db_version
 
