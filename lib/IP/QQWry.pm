@@ -4,9 +4,10 @@ use 5.008;
 use warnings;
 use strict;
 use Carp;
-use version; our $VERSION = qv('0.0.13');
+use version; our $VERSION = qv('0.0.14');
 
 my %cache;
+my $tmp;            # used for hold temporary data
 
 sub new {
     my ( $class, $db ) = @_;
@@ -32,10 +33,10 @@ sub set_db {
 
 sub _init_db {
     my $self = shift;
-    read $self->{fh}, $_, 4;
-    $self->{first_index} = unpack 'V', $_;
-    read $self->{fh}, $_, 4;
-    $self->{last_index} = unpack 'V', $_;
+    read $self->{fh}, $tmp, 4;
+    $self->{first_index} = unpack 'V', $tmp;
+    read $self->{fh}, $tmp, 4;
+    $self->{last_index} = unpack 'V', $tmp;
 }
 
 # sub query is the the interface for user.
@@ -48,7 +49,7 @@ sub query {
         return;
     }
 
-    my $ip = $self->_convert_input( $input );
+    my $ip = $self->_convert_input($input);
 
     if ($ip) {
         $cache{$ip} = [ $self->_result($ip) ] unless $self->cached($ip);
@@ -77,7 +78,7 @@ sub cached {
 
 sub clear {
     my ( $self, $ip ) = @_;
-    if ( $ip ) {
+    if ($ip) {
         undef $cache{$ip};
     }
     else {
@@ -99,19 +100,19 @@ sub _result {
     my ( $base, $ext ) = (q{}) x 2;
 
     seek $self->{fh}, $index + 4, 0;
-    read $self->{fh}, $_, 3;
+    read $self->{fh}, $tmp, 3;
 
-    my $offset = unpack 'V', $_ . chr 0;
+    my $offset = unpack 'V', $tmp . chr 0;
     seek $self->{fh}, $offset + 4, 0;
-    read $self->{fh}, $_, 1;
+    read $self->{fh}, $tmp, 1;
 
-    my $mode = ord;
+    my $mode = ord $tmp;
 
     if ( $mode == 1 ) {
         $self->_seek;
         $offset = tell $self->{fh};
-        read $self->{fh}, $_, 1;
-        $mode = ord;
+        read $self->{fh}, $tmp, 1;
+        $mode = ord $tmp;
         if ( $mode == 2 ) {
             $self->_seek;
             $base = $self->_str;
@@ -151,18 +152,18 @@ sub _index {
     while ( $low <= $up ) {
         $mid = int( ( $low + $up ) / 2 );
         seek $self->{fh}, $self->{first_index} + $mid * 7, 0;
-        read $self->{fh}, $_, 4;
-        $ip_start = unpack 'V', $_;
+        read $self->{fh}, $tmp, 4;
+        $ip_start = unpack 'V', $tmp;
 
         if ( $ip < $ip_start ) {
             $up = $mid - 1;
         }
         else {
-            read $self->{fh}, $_, 3;
-            $_ = unpack 'V', $_ . chr 0;
-            seek $self->{fh}, $_, 0;
-            read $self->{fh}, $_, 4;
-            $ip_end = unpack 'V', $_;
+            read $self->{fh}, $tmp, 3;
+            $tmp = unpack 'V', $tmp . chr 0;
+            seek $self->{fh}, $tmp, 0;
+            read $self->{fh}, $tmp, 4;
+            $ip_end = unpack 'V', $tmp;
 
             if ( $ip > $ip_end ) {
                 $low = $mid + 1;
@@ -178,8 +179,8 @@ sub _index {
 
 sub _seek {
     my $self = shift;
-    read $self->{fh}, $_, 3;
-    my $offset = unpack 'V', $_ . chr 0;
+    read $self->{fh}, $tmp, 3;
+    my $offset = unpack 'V', $tmp . chr 0;
     seek $self->{fh}, $offset, 0;
 }
 
@@ -189,18 +190,18 @@ sub _str {
     my $self = shift;
     my $str;
 
-    read $self->{fh}, $_, 1;
-    while ( ord > 0 ) {
-        $str .= $_;
-        read $self->{fh}, $_, 1;
+    read $self->{fh}, $tmp, 1;
+    while ( ord $tmp > 0 ) {
+        $str .= $tmp;
+        read $self->{fh}, $tmp, 1;
     }
     return $str;
 }
 
 sub _ext {
     my $self = shift;
-    read $self->{fh}, $_, 1;
-    my $mode = ord $_;
+    read $self->{fh}, $tmp, 1;
+    my $mode = ord $tmp;
 
     if ( $mode == 1 || $mode == 2 ) {
         $self->_seek;
@@ -227,7 +228,7 @@ IP::QQWry - a simple interface for QQWry IP database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.13
+This document describes IP::QQWry version 0.0.14
 
 
 =head1 SYNOPSIS

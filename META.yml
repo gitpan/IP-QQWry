@@ -1,9 +1,9 @@
 --- #YAML:1.0
 name:                IP-QQWry
-version:             v0.0.13
+version:             v0.0.14
 abstract:            a simple interface for QQWry IP database(file).
 license:             perl
-generated_by:        ExtUtils::MakeMaker version 6.31
+generated_by:        ExtUtils::MakeMaker version 6.32
 distribution_type:   module
 requires:     
     version:                       0.651

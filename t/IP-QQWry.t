@@ -8,7 +8,8 @@ use IP::QQWry;
 my $qqwry = IP::QQWry->new;
 isa_ok( $qqwry, 'IP::QQWry' );
 
-$qqwry = IP::QQWry->new('/opt/QQWry.Dat');
+my $db = '/opt/QQWry.Dat';
+$qqwry = IP::QQWry->new($db);
 isa_ok( $qqwry, 'IP::QQWry' );
 
 SKIP: {
@@ -60,5 +61,12 @@ SKIP: {
 
     like( $qqwry->db_version, qr/纯真网络\d{4}年\d{1,2}月\d{1,2}日IP数据/,
         'db version' );
+
+    {
+        local $_ = 'howdy world!';
+        $qqwry = IP::QQWry->new($db);
+        $qqwry->query('166.111.166.111');
+        is( $_, 'howdy world!', '$_ is not polluted any more' );
+    }
 }
 

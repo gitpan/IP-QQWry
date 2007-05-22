@@ -34,3 +34,5 @@ Revision history for IP-QQWry
        - bug fixed release
 0.0.13 2007-03-28
        - add cache support
+0.0.14 2007-05-22
+       - change $_ to $tmp to avoid variable pollution
