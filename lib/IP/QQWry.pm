@@ -4,7 +4,7 @@ use 5.008;
 use warnings;
 use strict;
 use Carp;
-use version; our $VERSION = qv('0.0.14');
+use version; our $VERSION = qv('0.0.15');
 
 my %cache;
 my $tmp;            # used for hold temporary data
@@ -228,7 +228,7 @@ IP::QQWry - a simple interface for QQWry IP database(file).
 
 =head1 VERSION
 
-This document describes IP::QQWry version 0.0.14
+This document describes IP::QQWry version 0.0.15
 
 
 =head1 SYNOPSIS

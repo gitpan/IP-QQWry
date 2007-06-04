@@ -1,34 +1,9 @@
-IP-QQWry version 0.0.14
+IP-QQWry version 0.0.15
 
 'QQWry.Dat' L<http://www.cz88.net/fox/> is an IP file database.  It provides
 some useful infomation such as the geographical position of the host bound
 with some IP address, the IP's owner, etc. L<IP::QQWry> provides a simple
 interface for this file database.
-
-
-INSTALLATION
-
-To install this module, run the following commands:
-
-    perl Makefile.PL
-    make
-    make test
-    make install
-
-
-Alternatively, to install with Module::Build, you can use the following commands:
-
-    perl Build.PL
-    ./Build
-    ./Build test
-    ./Build install
-
-
-
-DEPENDENCIES
-
-None.
-
 
 COPYRIGHT AND LICENCE
 

@@ -36,3 +36,6 @@ Revision history for IP-QQWry
        - add cache support
 0.0.14 2007-05-22
        - change $_ to $tmp to avoid variable pollution
+0.0.15 2007-06-05
+       - change module installer to Module::Install
+       - add kwalitee tests
