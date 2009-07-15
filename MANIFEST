@@ -1,6 +1,7 @@
 Changes
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
+inc/Module/Install/AuthorTests.pm
 inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -17,7 +18,7 @@ META.yml
 README
 t/00.load.t
 t/IP-QQWry.t
-t/kwalitee.t
-t/perlcritic.t
-t/pod-coverage.t
-t/pod.t
+xt/kwalitee.t
+xt/perlcritic.t
+xt/pod-coverage.t
+xt/pod.t
